@@ -1,7 +1,7 @@
-﻿<Application x:Class="SignalGenerator.App.App"
+﻿<Application x:Class="SignalParser.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:SignalGenerator.App"
+             xmlns:local="clr-namespace:SignalParser"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
          
