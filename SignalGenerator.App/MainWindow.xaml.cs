@@ -16,6 +16,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using SignalProcessing.Core;
 using static SkiaSharp.HarfBuzz.SKShaper;
 
 namespace SignalGenerator.App
@@ -159,45 +160,6 @@ namespace SignalGenerator.App
         private void Button_Click_Online(object sender, RoutedEventArgs e)
         {
             //Tools.Online;
-        }
-        private void Button_Click_CutUp(object sender, RoutedEventArgs e)
-        {
-            float upCut = (float.Parse(upCut_textBox.Text, CultureInfo.InvariantCulture));
-            SignalChannelSignal sig = signalList.Last();
-            WpfPlot1.Plot.Clear();
-            WpfPlot1.Refresh();
-            ThresholdCutter thre = new ThresholdCutter();
-            thre.SetSignal(sig);
-            thre.CutUp(upCut);
-            addSignal(sig);
-
-
-
-
-        }
-        private void Button_Click_CutDown(object sender, RoutedEventArgs e)
-        {
-            float downCut = (float.Parse(downCut_textBox.Text, CultureInfo.InvariantCulture));
-            SignalChannelSignal sig = signalList.Last();
-            WpfPlot1.Plot.Clear();
-            WpfPlot1.Refresh();
-            ThresholdCutter thre = new ThresholdCutter();
-            thre.SetSignal(sig);
-            thre.CutDown(downCut);
-            addSignal(sig);
-        }
-        private void Button_Click_CutUpAndDown(object sender, RoutedEventArgs e)
-        {
-            float upCut = (float.Parse(upCut_textBox.Text, CultureInfo.InvariantCulture));
-            float downCut = (float.Parse(downCut_textBox.Text, CultureInfo.InvariantCulture));
-            SignalChannelSignal sig = signalList.Last();
-            WpfPlot1.Plot.Clear();
-            WpfPlot1.Refresh();
-            ThresholdCutter thre = new ThresholdCutter();
-            thre.SetSignal(sig);
-            thre.CutUp(upCut);
-            thre.CutDown(downCut);
-            addSignal(sig);
         }
 
     }

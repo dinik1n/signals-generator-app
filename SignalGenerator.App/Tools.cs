@@ -1,5 +1,6 @@
 ﻿using HarfBuzzSharp;
 using OpenTK;
+using SignalProcessing.Core;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Documents;
 
-namespace SignalParser
+namespace SignalGenerator.App
 {
     internal class Tools
     {
