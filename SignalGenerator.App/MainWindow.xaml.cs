@@ -26,18 +26,18 @@ namespace SignalGenerator.App
     /// </summary>
     public partial class MainWindow : Window
     {
-        private SignalChannelSignal sig;
-        private List<SignalChannelSignal> signalList = new List<SignalChannelSignal>();
+        private SingleChannelSignal sig;
+        private List<SingleChannelSignal> signalList = new List<SingleChannelSignal>();
         public MainWindow()
         {
             InitializeComponent();
             
         }
-        private void addSignal(SignalChannelSignal obj)
+        private void addSignal(SingleChannelSignal obj)
         {
 
             signalList.Add(obj);
-            WpfPlot1.Plot.Add.ScatterLine(obj.TimeTick, obj.Value);
+            WpfPlot1.Plot.Add.ScatterLine(obj.TimeTick, obj.Data);
             WpfPlot1.Plot.Axes.AutoScale();
             WpfPlot1.Refresh();
         }
@@ -93,7 +93,7 @@ namespace SignalGenerator.App
             if (myDialog.ShowDialog() == true)
             {
                 string filePath = myDialog.FileName;
-                addSignal(SignalChannelSignalLoader.Load(filePath));
+                addSignal(SignalChannelSignalReader.Read(filePath));
                 
             }
             
@@ -121,7 +121,7 @@ namespace SignalGenerator.App
         }
         private void Button_Click_Summ(object sender, RoutedEventArgs e)
         {
-            SignalChannelSignal sig_summ = Tools.Summ(signalList);
+            SingleChannelSignal sig_summ = Tools.Summ(signalList);
             string text = "Lehfr";
             if(sig_summ == null)
             {
@@ -135,7 +135,7 @@ namespace SignalGenerator.App
         }
         private void Button_Click_Concat(object sender, RoutedEventArgs e)
         {
-            SignalChannelSignal sig_con = Tools.Concat(signalList);
+            SingleChannelSignal sig_con = Tools.Concat(signalList);
             string text = "Lehfr";
             if (sig_con == null)
             {
@@ -151,9 +151,9 @@ namespace SignalGenerator.App
         private void Button_Click_Offline(object sender, RoutedEventArgs e)
         {
             float window_size = (float.Parse(Window_textBox.Text, CultureInfo.InvariantCulture));
-            int intWindowSize = (int)(window_size * signalList.Last().Freq + 0.5);
-            float[] result = OfflineFilter.Filter(signalList.Last().Value, intWindowSize);
-            SignalChannelSignal newData = new SignalChannelSignal(signalList.Last().Freq, result);
+            int intWindowSize = (int)(window_size * signalList.Last().Frequency + 0.5);
+            float[] result = OfflineFilter.Filter(signalList.Last().Data, intWindowSize);
+            SingleChannelSignal newData = new SingleChannelSignal(signalList.Last().Frequency, result);
             addSignal(newData);
         }
 
