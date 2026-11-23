@@ -210,6 +210,25 @@ namespace SignalGenerator.App
                 MessageBox.Show($"Ошибка при онлайн-фильтрации: {ex.Message}", "Ошибка");
             }
         }
+        private void Button_Click_Resample(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (signalList.Count == 0)
+                {
+                    MessageBox.Show("Нет сигналов.");
+                    return;
+                }
+                float newFreq = float.Parse(NewFreq_textBox.Text, CultureInfo.InvariantCulture);
+                SingleChannelSignal resampled = Resampler.Resample(signalList[signalList.Count - 1], newFreq);
+                signalList.RemoveAt(signalList.Count - 1);
+                WpfPlot1.Plot.Remove(WpfPlot1.Plot.PlottableList.Last());
+                addSignal(resampled);
+            }
+            catch (Exception ex) {
+                MessageBox.Show(ex.Message);
+            }
+        }
 
     }
 }

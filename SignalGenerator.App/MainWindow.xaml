@@ -139,9 +139,13 @@ VerticalAlignment="Top"
 
 
             </StackPanel>
+            <Button Content="Изменить частоту" Width="110" Margin="10,10,0,0"
+        VerticalAlignment="Top" Click="Button_Click_Resample"/>
+            <Label Content="Новая частота(Гц)" VerticalAlignment="Top" Margin="10,10,0,0" Padding="0"/>
+            <TextBox x:Name="NewFreq_textBox" Text="20" VerticalAlignment="Top"
+         Margin="10,10,0,0" Height="20" Width="50"/>
 
 
-            
         </DockPanel>
     </Grid>
 </Window>
