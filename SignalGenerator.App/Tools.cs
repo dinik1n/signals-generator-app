@@ -66,65 +66,8 @@ namespace SignalGenerator.App
 
             return new SingleChannelSignal(freq, y);
         }
-        public static SingleChannelSignal Summ(List<SingleChannelSignal> signalList)
-        {
 
-            if (signalList.Count == 0)
-            {
-                return null;
-                
-            }
 
-            float freq = signalList.First().Frequency;
 
-            int max_len = signalList.Select(el => el.Data.Length).Max();
-            float[] summ_signals = new float[max_len];
-            double eps = 0.0000001;
-            for (int i = 0; i < signalList.Count; i++) {
-                if (Math.Abs(signalList[i].Frequency - freq) > eps)
-                {
-                    return null;
-                }
-            }
-                for (int i = 0; i< signalList.Count; i++)
-            {
-                {
-                    for(int j = 0; j < max_len; j++)
-                    {
-                        summ_signals[j] += signalList[i].Data[j];
-                    }
-                }
-            }
-            
-            return new SingleChannelSignal(freq, summ_signals);
-        }
-
-        public static SingleChannelSignal Concat(List<SingleChannelSignal> signalList)
-        {
-
-            if (signalList.Count == 0)
-            {
-                return null;
-
-            }
-
-            float freq = signalList.First().Frequency;
-
-            IEnumerable<float> concat_signals = new float[0];
-            double eps = 0.0000001;
-            for (int i = 0; i < signalList.Count; i++)
-            {
-                if (Math.Abs(signalList[i].Frequency - freq) > eps)
-                {
-                    return null;
-                }
-            }
-            for (int i = 0; i < signalList.Count; i++)
-            {
-                concat_signals = concat_signals.Concat(signalList[i].Data);
-            }
-
-            return new SingleChannelSignal(freq, concat_signals.ToArray());
-        }
     }
 }

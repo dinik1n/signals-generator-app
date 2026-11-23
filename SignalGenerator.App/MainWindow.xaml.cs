@@ -79,24 +79,30 @@ namespace SignalGenerator.App
             if (saveFileDialog.ShowDialog() == true && signalList.Count() != 0)
             {
                 string filePath = saveFileDialog.FileName;
-                SignalChannelSignalWriter.Write(signalList.Last(), filePath);
+                SingleChannelSignalWriter.Write(signalList.Last(), filePath);
             }
 
 
         }
         private void Button_Load(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog myDialog = new OpenFileDialog();
-            myDialog.Filter = "csv-файл(*.csv)|*.csv";
-            myDialog.CheckFileExists = true;
-            myDialog.Multiselect = false;
-            if (myDialog.ShowDialog() == true)
+            try
             {
-                string filePath = myDialog.FileName;
-                addSignal(SignalChannelSignalReader.Read(filePath));
-                
+                OpenFileDialog myDialog = new OpenFileDialog();
+                myDialog.Filter = "csv-файл(*.csv)|*.csv";
+                myDialog.CheckFileExists = true;
+                myDialog.Multiselect = false;
+                if (myDialog.ShowDialog() == true)
+                {
+                    string filePath = myDialog.FileName;
+                    addSignal(SignalChannelSignalReader.Read(filePath));
+
+                }
             }
-            
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
 
         }
         private void Button_Click_Noise(object sender, RoutedEventArgs e)
@@ -121,32 +127,29 @@ namespace SignalGenerator.App
         }
         private void Button_Click_Summ(object sender, RoutedEventArgs e)
         {
-            SingleChannelSignal sig_summ = Tools.Summ(signalList);
-            string text = "Lehfr";
-            if(sig_summ == null)
-            {
-                MessageBox.Show(text);
-            }
-            else
-            {
-                addSignal(sig_summ);
-            }
-                
+
+                try {
+                    addSignal(SignalOperations.Sum(signalList));
+                    }
+                catch (Exception ex){
+                    MessageBox.Show(ex.Message);
+                }
         }
+                
+        
         private void Button_Click_Concat(object sender, RoutedEventArgs e)
         {
-            SingleChannelSignal sig_con = Tools.Concat(signalList);
-            string text = "Lehfr";
-            if (sig_con == null)
-            {
-                MessageBox.Show(text);
-            }
-            else
-            {
-                addSignal(sig_con);
+                try
+                {
+                    addSignal(SignalOperations.Concat(signalList));
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
             }
 
-        }
+        
 
         private void Button_Click_Offline(object sender, RoutedEventArgs e)
         {
