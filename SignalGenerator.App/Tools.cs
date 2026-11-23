@@ -66,8 +66,5 @@ namespace SignalGenerator.App
 
             return new SingleChannelSignal(freq, y);
         }
-
-
-
     }
 }

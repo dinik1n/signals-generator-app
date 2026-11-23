@@ -21,9 +21,6 @@ using static SkiaSharp.HarfBuzz.SKShaper;
 
 namespace SignalGenerator.App
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
         private SingleChannelSignal sig;
@@ -95,7 +92,7 @@ namespace SignalGenerator.App
                 if (myDialog.ShowDialog() == true)
                 {
                     string filePath = myDialog.FileName;
-                    addSignal(SignalChannelSignalReader.Read(filePath));
+                    addSignal(SingleChannelSignalReader.Read(filePath));
 
                 }
             }
@@ -162,7 +159,56 @@ namespace SignalGenerator.App
 
         private void Button_Click_Online(object sender, RoutedEventArgs e)
         {
-            //Tools.Online;
+            try
+            {
+                if (signalList == null || signalList.Count == 0)
+                {
+                    MessageBox.Show("Нет сигналов для фильтрации.", "Ошибка");
+                    return;
+                }
+
+                if (!float.TryParse(Window_textBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out float windowSizeSec))
+                {
+                    MessageBox.Show("Некорректный размер окна. Введите число.", "Ошибка");
+                    return;
+                }
+
+                var lastSignal = signalList.Last();
+
+                int intWindowSize = (int)(windowSizeSec * lastSignal.Frequency + 0.5);
+
+                if (intWindowSize <= 0)
+                {
+                    MessageBox.Show("Размер окна должен быть больше нуля.", "Ошибка");
+                    return;
+                }
+
+                var onlineFilter = new OnlineFilter(intWindowSize);
+
+                float[] data = lastSignal.Data;
+                float[] result = new float[data.Length];
+
+
+                int chunkSize = 5;
+                for (int i = 0; i < data.Length; i += chunkSize)
+                {
+                    int currentChunkSize = Math.Min(chunkSize, data.Length - i);
+                    float[] chunk = new float[currentChunkSize];
+
+                    Array.Copy(data, i, chunk, 0, currentChunkSize);
+
+                    float[] filteredChunk = onlineFilter.Filter(chunk);
+
+                    Array.Copy(filteredChunk, 0, result, i, currentChunkSize);
+                }
+
+                SingleChannelSignal newData = new SingleChannelSignal(lastSignal.Frequency, result);
+                addSignal(newData);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при онлайн-фильтрации: {ex.Message}", "Ошибка");
+            }
         }
 
     }

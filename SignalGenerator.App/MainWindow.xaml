@@ -127,7 +127,7 @@ Margin="10,10,0,0"
 VerticalAlignment="Top"
             Click="Button_Click_Offline"/>
                 <Label Content="Окно(с)" VerticalAlignment="Top" Margin="10,10,0,0" Padding="0,0,0,0" />
-                <TextBox x:Name="Window_textBox" TextWrapping="Wrap" VerticalAlignment="Top" Text="0.2" Margin="10,10,0,0"
+                <TextBox x:Name="Window_textBox" TextWrapping="Wrap" VerticalAlignment="Top" Text="0.3" Margin="10,10,0,0"
                 Height="20" Width="50"/>
                 <Button
 Content="Он.фильтр"
@@ -135,7 +135,7 @@ HorizontalAlignment="Left"
 Width="70"
 Margin="10,10,0,0"
 VerticalAlignment="Top"
-            Click="Button_Click_Offline"/>
+            Click="Button_Click_Online"/>
 
 
             </StackPanel>
