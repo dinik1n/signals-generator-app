@@ -230,5 +230,88 @@ namespace SignalGenerator.App
             }
         }
 
+        private void Button_Click_Median_Offline(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (signalList == null || signalList.Count == 0)
+                {
+                    MessageBox.Show("Нет сигналов для фильтрации.", "Ошибка");
+                    return;
+                }
+
+                if (!float.TryParse(Window_textBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out float windowSizeSec))
+                {
+                    MessageBox.Show("Некорректный размер окна. Введите число.", "Ошибка");
+                    return;
+                }
+
+                var lastSignal = signalList.Last();
+                int intWindowSize = (int)(windowSizeSec * lastSignal.Frequency + 0.5);
+
+                if (intWindowSize <= 0 || intWindowSize % 2 == 0)
+                {
+                    MessageBox.Show("Для медианного фильтра размер окна в отсчетах должен быть положительным и нечётным.", "Ошибка");
+                    return;
+                }
+
+                float[] result = OfflineMedianFilter.Filter(lastSignal.Data, intWindowSize);
+                SingleChannelSignal newData = new SingleChannelSignal(lastSignal.Frequency, result);
+                addSignal(newData);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при медианной офлайн-фильтрации: {ex.Message}", "Ошибка");
+            }
+        }
+        private void Button_Click_Median_Online(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (signalList == null || signalList.Count == 0)
+                {
+                    MessageBox.Show("Нет сигналов для фильтрации.", "Ошибка");
+                    return;
+                }
+
+                if (!float.TryParse(Window_textBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out float windowSizeSec))
+                {
+                    MessageBox.Show("Некорректный размер окна. Введите число.", "Ошибка");
+                    return;
+                }
+
+                var lastSignal = signalList.Last();
+                int intWindowSize = (int)(windowSizeSec * lastSignal.Frequency + 0.5);
+
+                if (intWindowSize <= 0 || intWindowSize % 2 == 0)
+                {
+                    MessageBox.Show("Для медианного фильтра размер окна в отсчетах должен быть положительным и нечётным.", "Ошибка");
+                    return;
+                }
+
+                var medianFilter = new OnlineMedianFilter(intWindowSize);
+                float[] data = lastSignal.Data;
+                float[] result = new float[data.Length];
+
+                int chunkSize = 7;
+                for (int i = 0; i < data.Length; i += chunkSize)
+                {
+                    int currentChunkSize = Math.Min(chunkSize, data.Length - i);
+                    float[] chunk = new float[currentChunkSize];
+                    Array.Copy(data, i, chunk, 0, currentChunkSize);
+
+                    float[] filteredChunk = medianFilter.Filter(chunk);
+                    Array.Copy(filteredChunk, 0, result, i, currentChunkSize);
+                }
+
+                SingleChannelSignal newData = new SingleChannelSignal(lastSignal.Frequency, result);
+                addSignal(newData);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при медианной онлайн-фильтрации: {ex.Message}", "Ошибка");
+            }
+        }
+
     }
 }
