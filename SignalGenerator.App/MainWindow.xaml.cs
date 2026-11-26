@@ -12,16 +12,28 @@ namespace SignalGenerator.App
     public partial class MainWindow : Window
     {
         private List<SingleChannelSignal> signalList = new List<SingleChannelSignal>();
+        private readonly ThresholdAnalyzer _thresholdAnalyzer = new ThresholdAnalyzer();
+        private SignalMarkerRenderer _markerRenderer;
+        private int _markerCount = 0;
+        private SignalAnalysisResult _analysisResult;
 
         public MainWindow()
         {
             InitializeComponent();
+
+            _markerRenderer = new SignalMarkerRenderer(WpfPlot1.Plot);
+
+            _thresholdAnalyzer.MarkerDetected += ThresholdAnalyzer_MarkerDetected_Draw;
+
+            _thresholdAnalyzer.MarkerDetected += ThresholdAnalyzer_MarkerDetected_AddToList;
+
             SignalTypeComboBox.ItemsSource = Enum.GetValues(typeof(SignalType));
             SignalTypeComboBox.SelectedIndex = 0;
         }
 
         private void addSignal(SingleChannelSignal obj)
         {
+            ClearAnalysis();
             signalList.Add(obj);
             WpfPlot1.Plot.Add.ScatterLine(obj.TimeTick, obj.Data);
             WpfPlot1.Plot.Axes.AutoScale();
@@ -30,6 +42,7 @@ namespace SignalGenerator.App
 
         private void Button_Clear(object sender, RoutedEventArgs e)
         {
+            ClearAnalysis();
             signalList.Clear();
             WpfPlot1.Plot.Clear();
             WpfPlot1.Refresh();
@@ -230,6 +243,7 @@ namespace SignalGenerator.App
 
         private void Button_Click_Remove(object sender, RoutedEventArgs e)
         {
+            ClearAnalysis();
             if (signalList.Count == 0)
             {
                 MessageBox.Show("yt elfkzq");
@@ -253,6 +267,7 @@ namespace SignalGenerator.App
                 }
                 float newFreq = float.Parse(NewFreq_textBox.Text, CultureInfo.InvariantCulture);
                 SingleChannelSignal resampled = Resampler.Resample(signalList[signalList.Count - 1], newFreq);
+                ClearAnalysis();
                 signalList.RemoveAt(signalList.Count - 1);
                 WpfPlot1.Plot.Remove(WpfPlot1.Plot.PlottableList.Last());
                 addSignal(resampled);
@@ -306,6 +321,108 @@ namespace SignalGenerator.App
                 string filePath = saveFileDialog.FileName;
                 SingleChannelSignalWriter.Write(signalList.Last(), filePath);
             }
+        }
+
+        private void ThresholdAnalyzer_MarkerDetected_Draw(
+    object sender,
+    MarkerDetectedEventArgs e)
+        {
+            _markerRenderer.AddMarker(
+                e.Time,
+                e.Value,
+                e.Marker.Direction);
+
+            WpfPlot1.Refresh();
+        }
+
+        private void ThresholdAnalyzer_MarkerDetected_AddToList(
+    object sender,
+    MarkerDetectedEventArgs e)
+        {
+            string direction = e.Marker.Direction == CrossingDirection.Up
+                ? "Вверх"
+                : "Вниз";
+
+            MarkerListBox.Items.Add(
+                $"Отсчёт: {e.Marker.SampleIndex} | " +
+                $"Направление: {direction} | " +
+                $"Время: {e.Time.ToString("F4", CultureInfo.InvariantCulture)} с | " +
+                $"Значение: {e.Value.ToString("F4", CultureInfo.InvariantCulture)}");
+
+            _markerCount++;
+
+            SummaryTextBlock.Text =
+                $"Найдено пересечений: {_markerCount}";
+        }
+
+        private void Button_FindMarkers_Click(
+    object sender,
+    RoutedEventArgs e)
+        {
+            if (signalList.Count == 0)
+            {
+                MessageBox.Show("Нет сигналов для анализа.", "Ошибка");
+                return;
+            }
+
+            if (!float.TryParse(
+                ThresholdTextBox.Text,
+                NumberStyles.Float,
+                CultureInfo.InvariantCulture,
+                out float threshold)
+                || float.IsNaN(threshold)
+                || float.IsInfinity(threshold))
+            {
+                MessageBox.Show(
+                    "Введите корректное пороговое значение.",
+                    "Ошибка");
+
+                return;
+            }
+
+            // Очищаем результаты предыдущего анализа.
+            ClearAnalysis();
+
+            try
+            {
+                // Анализируем последнюю добавленную кривую.
+                _analysisResult = _thresholdAnalyzer.Analyze(
+                    signalList.Last(),
+                    threshold);
+
+                SummaryTextBlock.Text =
+                    $"Найдено пересечений: {_analysisResult.Markers.Count}";
+            }
+            catch (ArgumentException ex)
+            {
+                ClearAnalysis();
+                MessageBox.Show(ex.Message, "Ошибка анализа");
+            }
+
+            WpfPlot1.Refresh();
+        }
+
+        private void Button_ClearMarkers_Click(
+    object sender,
+    RoutedEventArgs e)
+        {
+            ClearAnalysis();
+
+            WpfPlot1.Refresh();
+        }
+        private void ClearAnalysis()
+        {
+            if (_markerRenderer != null)
+            {
+                _markerRenderer.ClearMarkers();
+            }
+
+            MarkerListBox.Items.Clear();
+
+            SummaryTextBlock.Text = "Найдено пересечений: 0";
+
+            _analysisResult = null;
+            _markerCount = 0;
         }
 
         private float ReadFloat(TextBox textBox, string parameterName)
