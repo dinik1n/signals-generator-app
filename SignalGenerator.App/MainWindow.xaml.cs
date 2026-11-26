@@ -11,17 +11,34 @@ namespace SignalGenerator.App
 {
     public partial class MainWindow : Window
     {
+        private readonly MarkerIntervalAnalyzer _intervalAnalyzer = new MarkerIntervalAnalyzer();
+        private readonly MarkerCounter _markerCounter = new MarkerCounter();
+        private readonly ThresholdAnalyzer _thresholdAnalyzer = new ThresholdAnalyzer();
+        private SignalAnalysisResult _analysisResult;
+        private int _markerCount = 0;
+        private SignalMarkerRenderer _markerRenderer;
         private List<SingleChannelSignal> signalList = new List<SingleChannelSignal>();
-
         public MainWindow()
         {
             InitializeComponent();
+
+            _markerRenderer = new SignalMarkerRenderer(WpfPlot1.Plot);
+
+            _thresholdAnalyzer.MarkerDetected += ThresholdAnalyzer_MarkerDetected_Draw;
+
+            _thresholdAnalyzer.MarkerDetected += ThresholdAnalyzer_MarkerDetected_AddToList;
+
             SignalTypeComboBox.ItemsSource = Enum.GetValues(typeof(SignalType));
             SignalTypeComboBox.SelectedIndex = 0;
+
+            _thresholdAnalyzer.MarkerDetected += _markerCounter.OnMarkerDetected;
+
+            _thresholdAnalyzer.MarkerDetected += _intervalAnalyzer.OnMarkerDetected;
         }
 
         private void addSignal(SingleChannelSignal obj)
         {
+            ClearAnalysis();
             signalList.Add(obj);
             WpfPlot1.Plot.Add.ScatterLine(obj.TimeTick, obj.Data);
             WpfPlot1.Plot.Axes.AutoScale();
@@ -30,8 +47,18 @@ namespace SignalGenerator.App
 
         private void Button_Clear(object sender, RoutedEventArgs e)
         {
+            ClearAnalysis();
             signalList.Clear();
             WpfPlot1.Plot.Clear();
+            WpfPlot1.Refresh();
+        }
+
+        private void Button_ClearMarkers_Click(
+    object sender,
+    RoutedEventArgs e)
+        {
+            ClearAnalysis();
+
             WpfPlot1.Refresh();
         }
 
@@ -230,6 +257,7 @@ namespace SignalGenerator.App
 
         private void Button_Click_Remove(object sender, RoutedEventArgs e)
         {
+            ClearAnalysis();
             if (signalList.Count == 0)
             {
                 MessageBox.Show("yt elfkzq");
@@ -253,6 +281,7 @@ namespace SignalGenerator.App
                 }
                 float newFreq = float.Parse(NewFreq_textBox.Text, CultureInfo.InvariantCulture);
                 SingleChannelSignal resampled = Resampler.Resample(signalList[signalList.Count - 1], newFreq);
+                ClearAnalysis();
                 signalList.RemoveAt(signalList.Count - 1);
                 WpfPlot1.Plot.Remove(WpfPlot1.Plot.PlottableList.Last());
                 addSignal(resampled);
@@ -273,6 +302,69 @@ namespace SignalGenerator.App
             {
                 MessageBox.Show(ex.Message);
             }
+        }
+
+        private void Button_FindMarkers_Click(
+    object sender,
+    RoutedEventArgs e)
+        {
+            if (signalList.Count == 0)
+            {
+                MessageBox.Show("Нет сигналов для анализа.", "Ошибка");
+                return;
+            }
+
+            if (!float.TryParse(
+                ThresholdTextBox.Text,
+                NumberStyles.Float,
+                CultureInfo.InvariantCulture,
+                out float threshold)
+                || float.IsNaN(threshold)
+                || float.IsInfinity(threshold))
+            {
+                MessageBox.Show(
+                    "Введите корректное пороговое значение.",
+                    "Ошибка");
+
+                return;
+            }
+
+            // Очищаем результаты предыдущего анализа.
+            ClearAnalysis();
+
+            try
+            {
+                // Анализируем последнюю добавленную кривую.
+                _analysisResult = _thresholdAnalyzer.Analyze(
+                    signalList.Last(),
+                    threshold);
+
+                SummaryTextBlock.Text =
+                    $"Найдено пересечений: {_analysisResult.Markers.Count}";
+                DirectionCountTextBlock.Text =
+    $"Вверх: {_markerCounter.UpCount} | " +
+    $"Вниз: {_markerCounter.DownCount}";
+
+                if (_intervalAnalyzer.MinimumInterval.HasValue)
+                {
+                    IntervalTextBlock.Text =
+                        $"Мин. интервал: " +
+                        $"{_intervalAnalyzer.MinimumInterval.Value:F3} с | " +
+                        $"Макс. интервал: " +
+                        $"{_intervalAnalyzer.MaximumInterval.Value:F3} с";
+                }
+                else
+                {
+                    IntervalTextBlock.Text = "Интервалы: не определены";
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                ClearAnalysis();
+                MessageBox.Show(ex.Message, "Ошибка анализа");
+            }
+
+            WpfPlot1.Refresh();
         }
 
         private void Button_Load(object sender, RoutedEventArgs e)
@@ -306,6 +398,26 @@ namespace SignalGenerator.App
                 string filePath = saveFileDialog.FileName;
                 SingleChannelSignalWriter.Write(signalList.Last(), filePath);
             }
+        }
+
+        private void ClearAnalysis()
+        {
+            if (_markerRenderer != null)
+            {
+                _markerRenderer.ClearMarkers();
+            }
+
+            MarkerListBox.Items.Clear();
+            _markerCounter.Reset();
+            _intervalAnalyzer.Reset();
+
+            DirectionCountTextBlock.Text = "Вверх: 0 | Вниз: 0";
+            IntervalTextBlock.Text = "Интервалы: не определены";
+
+            SummaryTextBlock.Text = "Найдено пересечений: 0";
+
+            _analysisResult = null;
+            _markerCount = 0;
         }
 
         private float ReadFloat(TextBox textBox, string parameterName)
@@ -361,6 +473,7 @@ namespace SignalGenerator.App
                         Phase = ReadFloat(TrianglePhaseTextBox, "Фаза"),
                         Amplitude = ReadFloat(TriangleAmplitudeTextBox, "Амплитуда")
                     };
+
                 case SignalType.Saw:
 
                     return new SawParameters
@@ -369,6 +482,7 @@ namespace SignalGenerator.App
                         Phase = ReadFloat(SawPhaseTextBox, "Фаза"),
                         Amplitude = ReadFloat(SawAmplitudeTextBox, "Амплитуда")
                     };
+
                 case SignalType.Constant:
 
                     return new ConstantParameters
@@ -407,16 +521,55 @@ namespace SignalGenerator.App
                 case SignalType.Noise:
                     NoisePanel.Visibility = Visibility.Visible;
                     break;
+
                 case SignalType.Triangle:
                     TrianglePanel.Visibility = Visibility.Visible;
                     break;
+
                 case SignalType.Saw:
                     SawPanel.Visibility = Visibility.Visible;
                     break;
+
                 case SignalType.Constant:
                     ConstantPanel.Visibility = Visibility.Visible;
                     break;
             }
+        }
+
+        private void ThresholdAnalyzer_MarkerDetected_AddToList(
+    object sender,
+    MarkerDetectedEventArgs e)
+        {
+            string direction = e.Marker.Direction == CrossingDirection.Up
+                ? "вверх"
+                : "вниз";
+
+            string time = e.Time.ToString(
+                "F3",
+                CultureInfo.GetCultureInfo("ru-RU"));
+
+            string value = e.Value.ToString(
+                CultureInfo.GetCultureInfo("ru-RU"));
+
+            MarkerListBox.Items.Add(
+                $"{time} с; {value}; {direction}");
+
+            _markerCount++;
+
+            SummaryTextBlock.Text =
+                $"Найдено пересечений: {_markerCount}";
+        }
+
+        private void ThresholdAnalyzer_MarkerDetected_Draw(
+                                            object sender,
+    MarkerDetectedEventArgs e)
+        {
+            _markerRenderer.AddMarker(
+                e.Time,
+                e.Value,
+                e.Marker.Direction);
+
+            WpfPlot1.Refresh();
         }
     }
 }
