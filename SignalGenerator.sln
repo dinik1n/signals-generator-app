@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignalGenerator.App", "Sign
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignalProcessing.Core", "..\signals-core\SignalProcessing.Core\SignalProcessing.Core.csproj", "{D7DEBB59-1409-41B5-BC75-BAC6F517B3BC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignalProcessing.Core.Tests", "..\signals-core\SignalProcessing.Core.Tests\SignalProcessing.Core.Tests.csproj", "{0F4904BA-96B0-4CC7-A4C5-63FC4642F309}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{D7DEBB59-1409-41B5-BC75-BAC6F517B3BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D7DEBB59-1409-41B5-BC75-BAC6F517B3BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D7DEBB59-1409-41B5-BC75-BAC6F517B3BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F4904BA-96B0-4CC7-A4C5-63FC4642F309}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F4904BA-96B0-4CC7-A4C5-63FC4642F309}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F4904BA-96B0-4CC7-A4C5-63FC4642F309}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F4904BA-96B0-4CC7-A4C5-63FC4642F309}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

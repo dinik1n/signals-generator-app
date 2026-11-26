@@ -118,16 +118,16 @@ VerticalAlignment="Top"
                 <TextBox x:Name="Amplitude_textBox" TextWrapping="Wrap" VerticalAlignment="Top" Text="2" Margin="10,10,0,0"
                     Height="20" Width="50"/>
             </StackPanel>
-            <StackPanel DockPanel.Dock="Bottom" Height="50" Orientation="Horizontal">
+            <StackPanel DockPanel.Dock="Bottom" Height="200" Orientation="Vertical">
                 <Button
 Content="Оф.фильтр"
-HorizontalAlignment="Right"
+HorizontalAlignment="Left"
 Width="70"
 Margin="10,10,0,0"
 VerticalAlignment="Top"
             Click="Button_Click_Offline"/>
                 <Label Content="Окно(с)" VerticalAlignment="Top" Margin="10,10,0,0" Padding="0,0,0,0" />
-                <TextBox x:Name="Window_textBox" TextWrapping="Wrap" VerticalAlignment="Top" Text="0.2" Margin="10,10,0,0"
+                <TextBox x:Name="Window_textBox" TextWrapping="Wrap" VerticalAlignment="Top" Text="0.3" Margin="10,10,0,0"
                 Height="20" Width="50"/>
                 <Button
 Content="Он.фильтр"
@@ -135,13 +135,35 @@ HorizontalAlignment="Left"
 Width="70"
 Margin="10,10,0,0"
 VerticalAlignment="Top"
-            Click="Button_Click_Offline"/>
+            Click="Button_Click_Online"/>
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Height="50">
+                    <Button
+Content="Мед.офлайн"
+VerticalAlignment="Top"
+Width="110"
+Margin="10,10,0,0"
+Click="Button_Click_Median_Offline"/>
+                    <Button
+Content="Мед.онлайн"
+Width="110"
+Margin="10,10,0,0"
+VerticalAlignment="Top"
+Click="Button_Click_Median_Online"/>
+                </StackPanel>
 
 
             </StackPanel>
 
 
-            
+            <Button Content="Изменить частоту" Width="110" Margin="10,10,0,0"
+        VerticalAlignment="Top" Click="Button_Click_Resample"/>
+            <Label Content="Новая частота(Гц)" VerticalAlignment="Top" Margin="10,10,0,0" Padding="0"/>
+            <TextBox x:Name="NewFreq_textBox" Text="20" VerticalAlignment="Top"
+         Margin="10,10,0,0" Height="20" Width="50"/>
+
+
+
+
         </DockPanel>
     </Grid>
 </Window>

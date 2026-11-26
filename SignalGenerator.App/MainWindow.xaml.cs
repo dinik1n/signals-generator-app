@@ -21,23 +21,20 @@ using static SkiaSharp.HarfBuzz.SKShaper;
 
 namespace SignalGenerator.App
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
-        private SignalChannelSignal sig;
-        private List<SignalChannelSignal> signalList = new List<SignalChannelSignal>();
+        private SingleChannelSignal sig;
+        private List<SingleChannelSignal> signalList = new List<SingleChannelSignal>();
         public MainWindow()
         {
             InitializeComponent();
             
         }
-        private void addSignal(SignalChannelSignal obj)
+        private void addSignal(SingleChannelSignal obj)
         {
 
             signalList.Add(obj);
-            WpfPlot1.Plot.Add.ScatterLine(obj.TimeTick, obj.Value);
+            WpfPlot1.Plot.Add.ScatterLine(obj.TimeTick, obj.Data);
             WpfPlot1.Plot.Axes.AutoScale();
             WpfPlot1.Refresh();
         }
@@ -79,24 +76,30 @@ namespace SignalGenerator.App
             if (saveFileDialog.ShowDialog() == true && signalList.Count() != 0)
             {
                 string filePath = saveFileDialog.FileName;
-                SignalChannelSignalWriter.Write(signalList.Last(), filePath);
+                SingleChannelSignalWriter.Write(signalList.Last(), filePath);
             }
 
 
         }
         private void Button_Load(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog myDialog = new OpenFileDialog();
-            myDialog.Filter = "csv-файл(*.csv)|*.csv";
-            myDialog.CheckFileExists = true;
-            myDialog.Multiselect = false;
-            if (myDialog.ShowDialog() == true)
+            try
             {
-                string filePath = myDialog.FileName;
-                addSignal(SignalChannelSignalLoader.Load(filePath));
-                
+                OpenFileDialog myDialog = new OpenFileDialog();
+                myDialog.Filter = "csv-файл(*.csv)|*.csv";
+                myDialog.CheckFileExists = true;
+                myDialog.Multiselect = false;
+                if (myDialog.ShowDialog() == true)
+                {
+                    string filePath = myDialog.FileName;
+                    addSignal(SingleChannelSignalReader.Read(filePath));
+
+                }
             }
-            
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
 
         }
         private void Button_Click_Noise(object sender, RoutedEventArgs e)
@@ -121,45 +124,193 @@ namespace SignalGenerator.App
         }
         private void Button_Click_Summ(object sender, RoutedEventArgs e)
         {
-            SignalChannelSignal sig_summ = Tools.Summ(signalList);
-            string text = "Lehfr";
-            if(sig_summ == null)
-            {
-                MessageBox.Show(text);
-            }
-            else
-            {
-                addSignal(sig_summ);
-            }
-                
+
+                try {
+                    addSignal(SignalOperations.Sum(signalList));
+                    }
+                catch (Exception ex){
+                    MessageBox.Show(ex.Message);
+                }
         }
+                
+        
         private void Button_Click_Concat(object sender, RoutedEventArgs e)
         {
-            SignalChannelSignal sig_con = Tools.Concat(signalList);
-            string text = "Lehfr";
-            if (sig_con == null)
-            {
-                MessageBox.Show(text);
-            }
-            else
-            {
-                addSignal(sig_con);
+                try
+                {
+                    addSignal(SignalOperations.Concat(signalList));
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
             }
 
-        }
+        
 
         private void Button_Click_Offline(object sender, RoutedEventArgs e)
         {
             float window_size = (float.Parse(Window_textBox.Text, CultureInfo.InvariantCulture));
-            int intWindowSize = (int)(window_size * signalList.Last().Freq + 0.5);
-            float[] result = OfflineFilter.Filter(signalList.Last().Value, intWindowSize);
-            SignalChannelSignal newData = new SignalChannelSignal(signalList.Last().Freq, result);
+            int intWindowSize = (int)(window_size * signalList.Last().Frequency + 0.5);
+            float[] result = OfflineFilter.Filter(signalList.Last().Data, intWindowSize);
+            SingleChannelSignal newData = new SingleChannelSignal(signalList.Last().Frequency, result);
             addSignal(newData);
         }
 
         private void Button_Click_Online(object sender, RoutedEventArgs e)
         {
-            //Tools.Online;
+            try
+            {
+                if (signalList == null || signalList.Count == 0)
+                {
+                    MessageBox.Show("Нет сигналов для фильтрации.", "Ошибка");
+                    return;
+                }
+
+                if (!float.TryParse(Window_textBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out float windowSizeSec))
+                {
+                    MessageBox.Show("Некорректный размер окна. Введите число.", "Ошибка");
+                    return;
+                }
+
+                var lastSignal = signalList.Last();
+
+                int intWindowSize = (int)(windowSizeSec * lastSignal.Frequency + 0.5);
+
+                if (intWindowSize <= 0)
+                {
+                    MessageBox.Show("Размер окна должен быть больше нуля.", "Ошибка");
+                    return;
+                }
+
+                var onlineFilter = new OnlineFilter(intWindowSize);
+
+                float[] data = lastSignal.Data;
+                float[] result = new float[data.Length];
+
+
+                int chunkSize = 5;
+                for (int i = 0; i < data.Length; i += chunkSize)
+                {
+                    int currentChunkSize = Math.Min(chunkSize, data.Length - i);
+                    float[] chunk = new float[currentChunkSize];
+
+                    Array.Copy(data, i, chunk, 0, currentChunkSize);
+
+                    float[] filteredChunk = onlineFilter.Filter(chunk);
+
+                    Array.Copy(filteredChunk, 0, result, i, currentChunkSize);
+                }
+
+                SingleChannelSignal newData = new SingleChannelSignal(lastSignal.Frequency, result);
+                addSignal(newData);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при онлайн-фильтрации: {ex.Message}", "Ошибка");
+            }
+        }
+        private void Button_Click_Resample(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (signalList.Count == 0)
+                {
+                    MessageBox.Show("Нет сигналов.");
+                    return;
+                }
+                float newFreq = float.Parse(NewFreq_textBox.Text, CultureInfo.InvariantCulture);
+                SingleChannelSignal resampled = Resampler.Resample(signalList[signalList.Count - 1], newFreq);
+                signalList.RemoveAt(signalList.Count - 1);
+                WpfPlot1.Plot.Remove(WpfPlot1.Plot.PlottableList.Last());
+                addSignal(resampled);
+            }
+            catch (Exception ex) {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        private void Button_Click_Median_Offline(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (signalList == null || signalList.Count == 0)
+                {
+                    MessageBox.Show("Нет сигналов для фильтрации.", "Ошибка");
+                    return;
+                }
+
+                if (!float.TryParse(Window_textBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out float windowSizeSec))
+                {
+                    MessageBox.Show("Некорректный размер окна. Введите число.", "Ошибка");
+                    return;
+                }
+
+                var lastSignal = signalList.Last();
+                int intWindowSize = (int)(windowSizeSec * lastSignal.Frequency + 0.5);
+
+                if (intWindowSize <= 0 || intWindowSize % 2 == 0)
+                {
+                    MessageBox.Show("Для медианного фильтра размер окна в отсчетах должен быть положительным и нечётным.", "Ошибка");
+                    return;
+                }
+
+                float[] result = OfflineMedianFilter.Filter(lastSignal.Data, intWindowSize);
+                SingleChannelSignal newData = new SingleChannelSignal(lastSignal.Frequency, result);
+                addSignal(newData);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при медианной офлайн-фильтрации: {ex.Message}", "Ошибка");
+            }
+        }
+        private void Button_Click_Median_Online(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (signalList == null || signalList.Count == 0)
+                {
+                    MessageBox.Show("Нет сигналов для фильтрации.", "Ошибка");
+                    return;
+                }
+
+                if (!float.TryParse(Window_textBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out float windowSizeSec))
+                {
+                    MessageBox.Show("Некорректный размер окна. Введите число.", "Ошибка");
+                    return;
+                }
+
+                var lastSignal = signalList.Last();
+                int intWindowSize = (int)(windowSizeSec * lastSignal.Frequency + 0.5);
+
+                if (intWindowSize <= 0 || intWindowSize % 2 == 0)
+                {
+                    MessageBox.Show("Для медианного фильтра размер окна в отсчетах должен быть положительным и нечётным.", "Ошибка");
+                    return;
+                }
+
+                var medianFilter = new OnlineMedianFilter(intWindowSize);
+                float[] data = lastSignal.Data;
+                float[] result = new float[data.Length];
+
+                int chunkSize = 7;
+                for (int i = 0; i < data.Length; i += chunkSize)
+                {
+                    int currentChunkSize = Math.Min(chunkSize, data.Length - i);
+                    float[] chunk = new float[currentChunkSize];
+                    Array.Copy(data, i, chunk, 0, currentChunkSize);
+
+                    float[] filteredChunk = medianFilter.Filter(chunk);
+                    Array.Copy(filteredChunk, 0, result, i, currentChunkSize);
+                }
+
+                SingleChannelSignal newData = new SingleChannelSignal(lastSignal.Frequency, result);
+                addSignal(newData);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при медианной онлайн-фильтрации: {ex.Message}", "Ошибка");
+            }
         }
 
     }
