@@ -255,6 +255,16 @@
                FontWeight="SemiBold"
                Margin="4,8" />
 
+                    <TextBlock x:Name="DirectionCountTextBlock"
+           Text="Вверх: 0 | Вниз: 0"
+           Margin="4,4"
+           FontWeight="SemiBold" />
+
+                    <TextBlock x:Name="IntervalTextBlock"
+           Text="Интервалы: не определены"
+           Margin="4,4"
+           FontWeight="SemiBold" />
+
                     <ListBox x:Name="MarkerListBox"
              Height="160"
              Margin="4"
