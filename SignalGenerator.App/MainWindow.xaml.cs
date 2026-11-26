@@ -340,14 +340,18 @@ namespace SignalGenerator.App
     MarkerDetectedEventArgs e)
         {
             string direction = e.Marker.Direction == CrossingDirection.Up
-                ? "Вверх"
-                : "Вниз";
+                ? "вверх"
+                : "вниз";
+
+            string time = e.Time.ToString(
+                "F3",
+                CultureInfo.GetCultureInfo("ru-RU"));
+
+            string value = e.Value.ToString(
+                CultureInfo.GetCultureInfo("ru-RU"));
 
             MarkerListBox.Items.Add(
-                $"Отсчёт: {e.Marker.SampleIndex} | " +
-                $"Направление: {direction} | " +
-                $"Время: {e.Time.ToString("F4", CultureInfo.InvariantCulture)} с | " +
-                $"Значение: {e.Value.ToString("F4", CultureInfo.InvariantCulture)}");
+                $"{time} с; {value}; {direction}");
 
             _markerCount++;
 
