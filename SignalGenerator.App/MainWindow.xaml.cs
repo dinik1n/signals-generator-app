@@ -353,6 +353,29 @@ namespace SignalGenerator.App
                         Range = ReadFloat(NoiseRangeTextBox, "Размах шума")
                     };
 
+                case SignalType.Triangle:
+
+                    return new TriangleParameters
+                    {
+                        Period = ReadFloat(TrianglePeriodTextBox, "Период"),
+                        Phase = ReadFloat(TrianglePhaseTextBox, "Фаза"),
+                        Amplitude = ReadFloat(TriangleAmplitudeTextBox, "Амплитуда")
+                    };
+                case SignalType.Saw:
+
+                    return new SawParameters
+                    {
+                        Period = ReadFloat(SawPeriodTextBox, "Период"),
+                        Phase = ReadFloat(SawPhaseTextBox, "Фаза"),
+                        Amplitude = ReadFloat(SawAmplitudeTextBox, "Амплитуда")
+                    };
+                case SignalType.Constant:
+
+                    return new ConstantParameters
+                    {
+                        Value = ReadFloat(ConstantValueTextBox, "Период")
+                    };
+
                 default:
 
                     throw new ArgumentOutOfRangeException(nameof(type));
@@ -364,6 +387,9 @@ namespace SignalGenerator.App
             SinePanel.Visibility = Visibility.Collapsed;
             LinePanel.Visibility = Visibility.Collapsed;
             NoisePanel.Visibility = Visibility.Collapsed;
+            TrianglePanel.Visibility = Visibility.Collapsed;
+            SawPanel.Visibility = Visibility.Collapsed;
+            ConstantPanel.Visibility = Visibility.Collapsed;
 
             if (!(SignalTypeComboBox.SelectedItem is SignalType type))
                 return;
@@ -380,6 +406,15 @@ namespace SignalGenerator.App
 
                 case SignalType.Noise:
                     NoisePanel.Visibility = Visibility.Visible;
+                    break;
+                case SignalType.Triangle:
+                    TrianglePanel.Visibility = Visibility.Visible;
+                    break;
+                case SignalType.Saw:
+                    SawPanel.Visibility = Visibility.Visible;
+                    break;
+                case SignalType.Constant:
+                    ConstantPanel.Visibility = Visibility.Visible;
                     break;
             }
         }

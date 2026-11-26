@@ -116,6 +116,58 @@
                                      Text="1" />
                     </StackPanel>
 
+                    <StackPanel x:Name="TrianglePanel"
+                Visibility="Collapsed">
+
+                        <TextBlock Text="Треугольник"
+                   FontWeight="SemiBold"
+                   Margin="4,8" />
+
+                        <TextBlock Text="Период (с)" />
+                        <TextBox x:Name="TrianglePeriodTextBox"
+                 Text="1" />
+
+                        <TextBlock Text="Фаза (с)" />
+                        <TextBox x:Name="TrianglePhaseTextBox"
+                 Text="0" />
+
+                        <TextBlock Text="Амплитуда" />
+                        <TextBox x:Name="TriangleAmplitudeTextBox"
+                 Text="1" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="SawPanel"
+                                Visibility="Collapsed">
+
+                        <TextBlock Text="Пила"
+                                   FontWeight="SemiBold"
+                                   Margin="4,8" />
+
+                        <TextBlock Text="Период (с)" />
+                        <TextBox x:Name="SawPeriodTextBox"
+                                 Text="1" />
+
+                        <TextBlock Text="Фаза (с)" />
+                        <TextBox x:Name="SawPhaseTextBox"
+                                 Text="0" />
+
+                        <TextBlock Text="Амплитуда" />
+                        <TextBox x:Name="SawAmplitudeTextBox"
+                                 Text="1" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="ConstantPanel"
+                                Visibility="Collapsed">
+
+                        <TextBlock Text="Постоянная"
+                                   FontWeight="SemiBold"
+                                   Margin="4,8" />
+
+                        <TextBlock Text="Значение" />
+                        <TextBox x:Name="ConstantValueTextBox"
+                                 Text="1" />
+                    </StackPanel>
+
                     <StackPanel x:Name="LinePanel"
                                     Visibility="Collapsed">
 

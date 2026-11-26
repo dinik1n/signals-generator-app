@@ -4,6 +4,9 @@
     {
         Sine,
         Line,
-        Noise
+        Noise,
+        Triangle,
+        Saw,
+        Constant
     }
 }
